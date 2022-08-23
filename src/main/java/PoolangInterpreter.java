@@ -3,6 +3,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
 
@@ -82,12 +84,6 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
         scopes.peek().floatScope.put(id, val);
     }
 
-//    @Override
-//    public Object visitNumber(PoolangParser.NumberContext ctx) {
-//        return Float.parseFloat(ctx.getText());
-//    }
-
-
     @Override
     public Object visitFloat(PoolangParser.FloatContext ctx) {
         return Float.parseFloat(ctx.getText());
@@ -106,17 +102,27 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
         boolean rightFloat = right instanceof Float;
         switch(ctx.operator.getText().intern()){
             case "+":
-                if(leftFloat && rightFloat)return (float)left + (float)right;
-                else if(!leftFloat && rightFloat) return (int)left + (float)right;
-                else if(leftFloat && !rightFloat) return (float)left + (int)right;
-                else if(!leftFloat && !rightFloat) return (int)left + (int)right;
-                break;
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a+b,
+                        (a,b) -> a+b,
+                        (a,b) -> a+b,
+                        (a,b) -> a+b);
+//                if(leftFloat && rightFloat)return (float)left + (float)right;
+//                else if(!leftFloat && rightFloat) return (int)left + (float)right;
+//                else if(leftFloat && !rightFloat) return (float)left + (int)right;
+//                else if(!leftFloat && !rightFloat) return (int)left + (int)right;
+//                break;
             case "-":
-                if(leftFloat && rightFloat)return (float)left - (float)right;
-                else if(!leftFloat && rightFloat) return (int)left - (float)right;
-                else if(leftFloat && !rightFloat) return (float)left - (int)right;
-                else if(!leftFloat && !rightFloat) return (int)left - (int)right;
-                break;
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a-b,
+                        (a,b) -> a-b,
+                        (a,b) -> a-b,
+                        (a,b) -> a-b);
+//                if(leftFloat && rightFloat)return (float)left - (float)right;
+//                else if(!leftFloat && rightFloat) return (int)left - (float)right;
+//                else if(leftFloat && !rightFloat) return (float)left - (int)right;
+//                else if(!leftFloat && !rightFloat) return (int)left - (int)right;
+//                break;
         }
         return -1.0f;
     }
@@ -129,17 +135,26 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
         boolean rightFloat = right instanceof Float;
         switch(ctx.operator.getText().intern()){
             case "*":
-                if(leftFloat && rightFloat)return (float)left * (float)right;
-                else if(!leftFloat && rightFloat) return (int)left * (float)right;
-                else if(leftFloat && !rightFloat) return (float)left * (int)right;
-                else if(!leftFloat && !rightFloat) return (int)left * (int)right;
-                break;
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a*b,
+                        (a,b) -> a*b,
+                        (a,b) -> a*b,
+                        (a,b) -> a*b);
+//                if(leftFloat && rightFloat)return (float)left * (float)right;
+//                else if(!leftFloat && rightFloat) return (int)left * (float)right;
+//                else if(leftFloat && !rightFloat) return (float)left * (int)right;
+//                else if(!leftFloat && !rightFloat) return (int)left * (int)right;
             case "/":
-                if(leftFloat && rightFloat)return (float)left / (float)right;
-                else if(!leftFloat && rightFloat) return (int)left / (float)right;
-                else if(leftFloat && !rightFloat) return (float)left / (int)right;
-                else if(!leftFloat && !rightFloat) return (int)left / (int)right;
-                break;
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a/b,
+                        (a,b) -> a/b,
+                        (a,b) -> a/b,
+                        (a,b) -> a/b);
+//                if(leftFloat && rightFloat)return (float)left / (float)right;
+//                else if(!leftFloat && rightFloat) return (int)left / (float)right;
+//                else if(leftFloat && !rightFloat) return (float)left / (int)right;
+//                else if(!leftFloat && !rightFloat) return (int)left / (int)right;
+//                break;
         }
         return -1.0f;
     }
@@ -148,17 +163,37 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
     public Object visitPower(PoolangParser.PowerContext ctx) {
         Object left = visit(ctx.left);
         Object right = visit(ctx.right);
-        boolean leftFloat = left instanceof Float;
-        boolean rightFloat = right instanceof Float;
+//        boolean leftFloat = left instanceof Float;
+//        boolean rightFloat = right instanceof Float;
         switch(ctx.operator.getText().intern()){
             case "^":
-                if(leftFloat && rightFloat)return Math.pow((float)left, (float)right);
-                else if(!leftFloat && rightFloat) return Math.pow((int)left, (float)right);
-                else if(leftFloat && !rightFloat) return Math.pow((float)left, (int)right);
-                else if(!leftFloat && !rightFloat) return Math.pow((int)left, (int)right);
-                break;
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> (float)Math.pow(a,b),
+                        (a,b) -> (float)Math.pow(a,b),
+                        (a,b) -> (float)Math.pow(a,b),
+                        (a,b) -> (float)Math.pow(a,b));
+//                if(leftFloat && rightFloat)         return Math.pow((float)left, (float)right);
+//                else if(!leftFloat && rightFloat)   return Math.pow((int)left, (float)right);
+//                else if(leftFloat && !rightFloat)   return Math.pow((float)left, (int)right);
+//                else if(!leftFloat && !rightFloat)  return Math.pow((int)left, (int)right);
+//                break;
         }
+//        return binaryIntFloatOp(left, right, (o, o2) -> Math.pow(o,o2));
         return -1.0f;
+    }
+
+    private Object binaryIntFloatOp(Object left, Object right,
+                                    BiFunction<Float,Float,Object> func1,
+                                    BiFunction<Integer,Float,Object> func2,
+                                    BiFunction<Float,Integer,Object> func3,
+                                    BiFunction<Integer,Integer,Object> func4){
+        boolean leftFloat = left instanceof Float;
+        boolean rightFloat = right instanceof Float;
+        if(leftFloat && rightFloat)return func1.apply((float)left, (float)right);
+        else if(!leftFloat && rightFloat) return func2.apply((int)left, (float)right);
+        else if(leftFloat && !rightFloat) return func3.apply((float)left, (int)right);
+        else if(!leftFloat && !rightFloat) return func4.apply((int)left, (int)right);
+        return null;
     }
 
     @Override
@@ -325,33 +360,87 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
         return (boolean)visit(ctx.left) && (boolean)visit(ctx.right);
     }
 
+//    @Override
+//    public Object visitNumRelational(PoolangParser.RelationalContext ctx) {
+//    }
+
     @Override
-    public Object visitRelational(PoolangParser.RelationalContext ctx) {
+    public Object visitNumericRelational(PoolangParser.NumericRelationalContext ctx) {
         String operation = ctx.operation.getText().intern();
         Object left = visit(ctx.left);
         Object right = visit(ctx.right);
         switch(operation){
-            case ">": return (float)left > (float)right;
-            case ">=":return (float)left >= (float)right;
-            case "<":return (float)left < (float)right;
-            case "<=":return (float)left <= (float)right;
-            case "==":return (float)left == (float)right;
-            case "!=":return (float)left != (float)right;
+            case ">":
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a > b,
+                        (a,b) -> a > b,
+                        (a,b) -> a > b,
+                        (a,b) -> a > b);
+//                return (float)left > (float)right;
+            case ">=":
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a >= b,
+                        (a,b) -> a >= b,
+                        (a,b) -> a >= b,
+                        (a,b) -> a >= b);
+//                return (float)left >= (float)right;
+            case "<":
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a < b,
+                        (a,b) -> a < b,
+                        (a,b) -> a < b,
+                        (a,b) -> a < b);
+//                return (float)left < (float)right;
+            case "<=":
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a <= b,
+                        (a,b) -> a <= b,
+                        (a,b) -> a <= b,
+                        (a,b) -> a <= b);
+//                return (float)left <= (float)right;
+            case "==":
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a == b,
+                        (a,b) -> {
+                            throw new UnsupportedOperationException();
+                        },
+                        (a,b) -> {
+                            throw new UnsupportedOperationException();
+                        },
+                        (a,b) -> a == b);
+//                return (float)left == (float)right;
+            case "!=":
+                return binaryIntFloatOp(left, right,
+                        (a,b) -> a != b,
+                        (a,b) -> {
+                            throw new UnsupportedOperationException();
+                        },
+                        (a,b) -> {
+                            throw new UnsupportedOperationException();
+                        },
+                        (a,b) -> a != b);
+//                return (float)left != (float)right;
             default: return -1;
         }
     }
 
-//    @Override
-//    public Object visitIf_stmt(CalculatorParser.If_stmtContext ctx) {
-//        boolean value = (boolean)visit(ctx.cond_expr());
-//        if(value){
-//            visit(ctx.ifblock);
-//        }else{
-//            visit(ctx.elseblock);
-//        }
-//        return value;
-//    }
-
+    @Override
+    public Object visitConditionalRelational(PoolangParser.ConditionalRelationalContext ctx) {
+        boolean left = (boolean)visit(ctx.left);
+        boolean right = (boolean)visit(ctx.right);
+        String operator = ctx.operation.getText();
+        switch(operator){
+            case "==":
+                return left == right;
+            case "!=":
+                return left != right;
+            case "&&":
+                return left && right;
+            case "||":
+                return left || right;
+        }
+        return false;
+    }
 
     @Override
     public Object visitIf(PoolangParser.IfContext ctx) {
@@ -381,11 +470,11 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
             for(int i=1;i<ctx.cond_expr().size();i++){//check elifs
                 if((boolean)visit(ctx.cond_expr(i))){
                     visit(ctx.block(i));
-                    break;//dont visit other stuff
+                    return true; //dont visit other stuff
                 }
             }
         }
-        return null;
+        return false;
     }
 
     @Override
@@ -434,11 +523,14 @@ public class PoolangInterpreter extends PoolangBaseVisitor<Object> {
 //        beenWonderingWhatThisIs = scanner.nextLine();
 
         beenWonderingWhatThisIs =
-                "int main(float a){\n" +
-                "    float b = 2.0;\n" +
-                "    print(a:float + b:float);\n" +
-                "}\n" +
-                "main(3.0): int;";
+                "int main(float a){" +
+                "   float b = 2.0;" +
+                "   print(a:float + b:float);" +
+                "   print(2 ^ 3);" +
+                "   print(true == false);" +
+                "}" +
+                "main(3.0): int;"
+                ;
 
 //        System.out.printf("entered '%s'\n", beenWonderingWhatThisIs);
         CharStream input = CharStreams.fromString(beenWonderingWhatThisIs);

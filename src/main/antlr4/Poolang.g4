@@ -50,7 +50,8 @@ arith_expr
 cond_expr
     : booleanLiteral                                # TrueOrFalse
     | identifier ':' bool_t                                     # BooleanReference
-    | left=arith_expr operation=relationals right=arith_expr # Relational
+    | left=arith_expr operation=numeric_relationals right=arith_expr # NumericRelational
+    | left=cond_expr operation=conditional_relationals right=cond_expr # ConditionalRelational
     | operator=NOT right=cond_expr                  # Not
     | left=cond_expr operator=AND right=cond_expr   # And
     | left=cond_expr operator=OR right=cond_expr    # Or
@@ -79,8 +80,8 @@ floatLiteral: DECIMAL;
 booleanLiteral: (TRUE | FALSE);
 stringLiteral: STRING;
 
-relationals: (GT | GTE | ST | STE | EQUALTO | NOT_EQUALTO);
-
+numeric_relationals: (GT | GTE | ST | STE | EQUALTO | NOT_EQUALTO);
+conditional_relationals: (EQUALTO | NOT_EQUALTO | AND | OR);
 //reference: TYPE ID;
 //anumber: NUMBER;
 

@@ -1,0 +1,10 @@
+Goals:
+- Easy distinction between runtime code, "compile-time" code, and "meta code".
+- Extremely expressive and concise typing system.
+  (Easy for user to "compile" a system of logic in their head into a program in the language.)
+- Inlining of "lazy" code. e.g what Haskell does.
+
+Python's imports: import X as Z"
+Nim's export of functions/types by using * "proc `*` *(a, b: seq[int]): seq[int] ="
+C++'s "namespace" concept. functions *can* live within a namespace.
+
